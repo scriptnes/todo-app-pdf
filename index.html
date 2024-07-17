@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Todo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico" />
+    <link rel="stylesheet" href="https://unpkg.com/vue2-datepicker/index.css" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <link href="css/styles.css" rel="stylesheet" />
+    <style>
+      @media (max-width: 800px) {
+        .btn span {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="container mt-5">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="text-left">
+          <div v-if="editableTourDetails">
+            <input v-model="tourNameEdit" class="form-control mb-1" />
+            <input v-model="tourNumberEdit" class="form-control mb-1" />
+            <input v-model="tourModelEdit" class="form-control mb-1" />
+            <div class="d-flex">
+              <button class="btn btn-sm btn-success mr-2" @click="saveTourDetails">Save</button>
+              <button class="btn btn-sm btn-secondary" @click="cancelTourEdit">Cancel</button>
+            </div>
+          </div>
+          <div v-else>
+            <h1 class="mb-0">Todo List - {{ totalTodos }}</h1>
+            <h4 v-if="tourName" class="text-muted">
+              {{ tourName }} - {{ tourNumber }} - {{ tourModel }}
+              <button class="btn btn-sm btn-warning ml-2" @click="editTourDetails">
+                <i class="fas fa-edit"></i>
+              </button>
+            </h4>
+          </div>
+        </div>
+        <button class="btn btn-secondary" @click="toggleButtonGroup">
+          <i class="fas fa-cog"></i>
+        </button>
+      </div>
+      <div v-show="buttonGroupVisible" class="mb-4">
+        <button class="btn btn-success mr-2" @click="savePreset">
+          <i class="fas fa-save"></i>
+          <span class="d-none d-sm-inline"> Save</span>
+        </button>
+        <button class="btn btn-danger mr-2" @click="deletePreset">
+          <i class="fas fa-trash"></i>
+          <span class="d-none d-sm-inline"> Delete</span>
+        </button>
+        <button class="btn btn-secondary mr-2" @click="exportPreset">
+          <i class="fas fa-file-export"></i>
+          <span class="d-none d-sm-inline"> Export</span>
+        </button>
+        <input type="file" id="fileInput" class="d-none" @change="importPreset" />
+        <button class="btn btn-info mr-2" @click="triggerFileInput">
+          <i class="fas fa-file-import"></i>
+          <span class="d-none d-sm-inline"> Import</span>
+        </button>
+        <button class="btn btn-warning" @click="toggleExpandAll">
+          <i class="fas fa-expand"></i>
+          <span class="d-none d-sm-inline"> {{ allExpanded ? 'Collapse' : 'Expand' }}</span>
+        </button>
+      </div>
+      <div id="accordion">
+        <div class="card" v-for="(todo, todoIndex) in todos" :key="todoIndex" :style="getCardStyle(todoIndex)">
+          <div class="card-header d-flex justify-content-between align-items-center" :id="'heading' + todoIndex">
+            <div v-if="editableHeader === todoIndex" class="flex-grow-1">
+              <input v-model="headerEdits" class="form-control w-100" />
+              <div class="d-flex mt-2">
+                <button class="btn btn-sm btn-success mr-2" @click="saveHeaderEdit(todoIndex)">Save</button>
+                <button class="btn btn-sm btn-secondary" @click="cancelHeaderEdit()">Cancel</button>
+              </div>
+            </div>
+            <div v-else class="d-flex justify-content-between align-items-center w-100">
+              <h5 class="mb-0 flex-grow-1">
+                <button class="btn btn-link" @click="toggleCollapse(todoIndex)">
+                  {{ todo.name || 'Enter your name here..' }}
+                </button>
+              </h5>
+              <button class="btn btn-sm btn-warning" @click.stop="editHeader(todoIndex, todo.name)">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+          </div>
+
+          <div
+            :id="'collapse' + todoIndex"
+            class="collapse"
+            :class="{ show: collapseStatus[todoIndex] }"
+            :aria-labelledby="'heading' + todoIndex"
+            data-parent="#accordion"
+          >
+            <div class="card-body">
+              <ul class="list-group">
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                  v-for="(task, taskIndex) in todo.tasks"
+                  :key="taskIndex"
+                >
+                  <div v-if="todo.editableTask === taskIndex">
+                    <input v-model="todo.taskEdits" class="form-control" />
+                    <button class="btn btn-sm btn-success" @click="saveTaskEdit(todo, taskIndex)">Save</button>
+                    <button class="btn btn-sm btn-secondary" @click="cancelTaskEdit(todo)">Cancel</button>
+                  </div>
+                  <div v-else class="d-flex justify-content-between align-items-center w-100">
+                    <span @click="toggleTask(todo, task)" :class="{ 'completed': isTaskCompleted(todo, task) }"
+                      >{{ task }}</span
+                    >
+                    <span>
+                      <div class="btn-group" v-if="isSmallScreen">
+                        <button type="button" class="btn btn-sm btn-secondary" @click="toggleTaskMenu(todo, taskIndex)">
+                          <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div v-show="todo.taskMenuVisible === taskIndex" class="dropdown-menu dropdown-menu-right show">
+                          <button class="dropdown-item" @click="editTask(todo, taskIndex, task)">
+                            <i class="fas fa-edit"></i> Edit
+                          </button>
+                          <button class="dropdown-item" @click="deleteTask(todo, taskIndex)">
+                            <i class="fas fa-trash"></i> Delete
+                          </button>
+                          <button class="dropdown-item" @click="insertTaskBelow(todo, taskIndex)">
+                            <i class="fas fa-plus"></i> Insert Below
+                          </button>
+                          <button class="dropdown-item" @click="moveTaskDown(todo, taskIndex)">
+                            <i class="fas fa-arrow-down"></i> Move Down
+                          </button>
+                        </div>
+                      </div>
+                      <div v-else>
+                        <button class="btn btn-sm btn-warning" @click="editTask(todo, taskIndex, task)">
+                          <i class="fas fa-edit"></i> <span></span>
+                        </button>
+                        <button class="btn btn-sm btn-danger" @click="deleteTask(todo, taskIndex)">
+                          <i class="fas fa-trash"></i> <span></span>
+                        </button>
+                        <button class="btn btn-sm btn-success" @click="insertTaskBelow(todo, taskIndex)">
+                          <i class="fas fa-plus"></i> <span></span>
+                        </button>
+                        <button class="btn btn-sm btn-primary" @click="moveTaskDown(todo, taskIndex)">
+                          <i class="fas fa-arrow-down"></i> <span></span>
+                        </button>
+                      </div>
+                    </span>
+                  </div>
+                </li>
+              </ul>
+              <div class="mt-3">
+                <p><strong>Select Start Date:</strong></p>
+                <vuejs-datepicker
+                  v-model="todo.startDate"
+                  :typeable="true"
+                  :use-utc="true"
+                  :disabled-dates="getDisabledDates()"
+                  class="datepicker-upwards"
+                >
+                </vuejs-datepicker>
+              </div>
+              <div class="mt-3">
+                <input type="text" v-model="todo.newTask" placeholder="New Task" class="form-control mb-2" />
+                <button class="btn btn-primary" @click="addTask(todo)">Add Task</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuejs-datepicker"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script>
+      Vue.component("vuejs-datepicker", window.vuejsDatepicker);
+
+      new Vue({
+        el: "#app",
+        data: {
+          todos: [],
+          tourName: "Tour Name",
+          tourNumber: "Tour Number",
+          tourModel: "Day-Model",
+          tourNameEdit: "",
+          tourNumberEdit: "",
+          tourModelEdit: "",
+          editableTourDetails: false,
+          collapseStatus: [],
+          editableTask: null,
+          taskEdits: "",
+          editableHeader: null,
+          headerEdits: "",
+          buttonGroupVisible: false,
+          allExpanded: false,
+          windowWidth: window.innerWidth,
+          id: uuid.v4(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        computed: {
+          isSmallScreen() {
+            return this.windowWidth <= 800;
+          },
+          totalTodos() {
+            return this.todos.length;
+          },
+        },
+        methods: {
+          updateWindowWidth() {
+            this.windowWidth = window.innerWidth;
+          },
+          toggleButtonGroup() {
+            this.buttonGroupVisible = !this.buttonGroupVisible;
+          },
+          toggleExpandAll() {
+            this.allExpanded = !this.allExpanded;
+            this.collapseStatus = this.todos.map(() => this.allExpanded);
+          },
+          editTourDetails() {
+            this.tourNameEdit = this.tourName;
+            this.tourNumberEdit = this.tourNumber;
+            this.tourModelEdit = this.tourModel;
+            this.editableTourDetails = true;
+          },
+          saveTourDetails() {
+            this.tourName = this.tourNameEdit;
+            this.tourNumber = this.tourNumberEdit;
+            this.tourModel = this.tourModelEdit;
+            this.editableTourDetails = false;
+            this.updatedAt = new Date().toISOString();
+          },
+          cancelTourEdit() {
+            this.editableTourDetails = false;
+          },
+          toggleTask(todo, task) {
+            const index = todo.completedTasks.indexOf(task);
+            if (index === -1) {
+              todo.completedTasks.push(task);
+            } else {
+              todo.completedTasks.splice(index, 1);
+            }
+            this.updatedAt = new Date().toISOString();
+          },
+          isTaskCompleted(todo, task) {
+            return todo.completedTasks.includes(task);
+          },
+          toggleCollapse(index) {
+            this.$set(this.collapseStatus, index, !this.collapseStatus[index]);
+          },
+          getCardStyle(index) {
+            const darkColors = this.generateDarkColors();
+            return {
+              backgroundColor: darkColors[index % darkColors.length],
+              color: "white",
+            };
+          },
+          generateDarkColors() {
+            return ["#3a3f5c", "#2e3b4e", "#1f487e", "#73556a", "#4e4e4e", "#333333", "#565c6d", "#6a6a6a"];
+          },
+          fetchData() {
+            const savedData = localStorage.getItem("todos");
+            if (savedData) {
+              const data = JSON.parse(savedData);
+              this.todos = data.todos.map((todo) => ({
+                ...todo,
+                newTask: "",
+              }));
+              this.tourName = data.tourName || "Tour Name";
+              this.tourNumber = data.tourNumber || "Tour Number";
+              this.tourModel = data.tourModel || "Day-Model";
+              this.id = data.id || uuid.v4();
+              this.createdAt = data.createdAt || new Date().toISOString();
+              this.updatedAt = data.updatedAt || new Date().toISOString();
+            } else {
+              const currentDate = new Date();
+              this.todos = [
+                {
+                  name: "",
+                  startDate: currentDate,
+                  tasks: ["Task 1", "Task 2", "Task 3"],
+                  completedTasks: [],
+                  editableTask: null,
+                  taskEdits: "",
+                  taskMenuVisible: null,
+                  newTask: "",
+                },
+              ];
+              this.todos.forEach(() => {
+                this.collapseStatus.push(false);
+              });
+            }
+          },
+          addTask(todo) {
+            if (todo.newTask.trim()) {
+              todo.tasks.push(todo.newTask.trim());
+              todo.newTask = "";
+              this.updatedAt = new Date().toISOString();
+            }
+          },
+          insertTaskBelow(todo, taskIndex) {
+            const newTask = prompt("Enter the new task");
+            if (newTask && newTask.trim()) {
+              todo.tasks.splice(taskIndex + 1, 0, newTask.trim());
+              this.updatedAt = new Date().toISOString();
+            }
+          },
+          editTask(todo, taskIndex, task) {
+            todo.editableTask = taskIndex;
+            todo.taskEdits = task;
+            todo.taskMenuVisible = null;
+          },
+          saveTaskEdit(todo, taskIndex) {
+            if (todo.taskEdits.trim()) {
+              this.$set(todo.tasks, taskIndex, todo.taskEdits.trim());
+              todo.editableTask = null;
+              todo.taskEdits = "";
+              this.updatedAt = new Date().toISOString();
+            }
+          },
+          cancelTaskEdit(todo) {
+            todo.editableTask = null;
+            todo.taskEdits = "";
+          },
+          deleteTask(todo, taskIndex) {
+            todo.tasks.splice(taskIndex, 1);
+            this.updatedAt = new Date().toISOString();
+          },
+          moveTaskDown(todo, taskIndex) {
+            const task = todo.tasks.splice(taskIndex, 1)[0];
+            let newIndex = (taskIndex + 1) % (todo.tasks.length + 1);
+
+            if (newIndex === todo.tasks.length) {
+              todo.tasks.push(task);
+            } else {
+              todo.tasks.splice(newIndex, 0, task);
+            }
+            this.updatedAt = new Date().toISOString();
+          },
+
+          editHeader(index, name) {
+            this.editableHeader = index;
+            this.headerEdits = name;
+          },
+          saveHeaderEdit(index) {
+            if (this.headerEdits.trim()) {
+              this.$set(this.todos[index], "name", this.headerEdits.trim());
+              this.editableHeader = null;
+              this.headerEdits = "";
+              this.updatedAt = new Date().toISOString();
+            }
+          },
+          cancelHeaderEdit() {
+            this.editableHeader = null;
+            this.headerEdits = "";
+          },
+          getDisabledDates() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1); 
+            return {
+              to: yesterday,
+            };
+          },
+          savePreset() {
+            const data = {
+              id: this.id,
+              todos: this.todos,
+              tourName: this.tourName,
+              tourNumber: this.tourNumber,
+              tourModel: this.tourModel,
+              createdAt: this.createdAt,
+              updatedAt: new Date().toISOString(),
+            };
+            localStorage.setItem("todos", JSON.stringify(data));
+            alert("Preset saved successfully!");
+          },
+          deletePreset() {
+            localStorage.removeItem("todos");
+            this.setDefaultTourDetails();
+            alert("Preset deleted successfully!");
+            this.fetchData();
+          },
+          exportPreset() {
+            const totalTasks = this.todos.reduce((total, todo) => total + todo.tasks.length, 0);
+            const totalCompletedTasks = this.todos.reduce((total, todo) => total + todo.completedTasks.length, 0);
+            const data = {
+              id: this.id,
+              tourName: this.tourName,
+              tourNumber: this.tourNumber,
+              tourModel: this.tourModel,
+              totalTodos: this.todos.length,
+              totalTasks: totalTasks,
+              totalCompletedTasks: totalCompletedTasks,
+              createdAt: this.createdAt,
+              updatedAt: new Date().toISOString(),
+              todos: this.todos.map((todo) => ({
+                name: todo.name,
+                startDate: todo.startDate,
+                tasks: todo.tasks,
+                completedTasks: todo.completedTasks,
+                editableTask: todo.editableTask,
+                taskEdits: todo.taskEdits,
+                taskMenuVisible: todo.taskMenuVisible,
+                newTask: todo.newTask,
+              })),
+            };
+            const dataStr = JSON.stringify(data);
+            const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `${this.tourName}_${this.tourNumber}_${this.tourModel}.json`;
+
+            const linkElement = document.createElement("a");
+            linkElement.setAttribute("href", dataUri);
+            linkElement.setAttribute("download", exportFileDefaultName);
+            linkElement.click();
+          },
+          triggerFileInput() {
+            document.getElementById("fileInput").click();
+          },
+          importPreset(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+              const contents = e.target.result;
+              try {
+                const importedData = JSON.parse(contents);
+                this.todos = importedData.todos.map((todo) => ({
+                  name: todo.name,
+                  startDate: todo.startDate,
+                  tasks: todo.tasks,
+                  completedTasks: todo.completedTasks,
+                  editableTask: todo.editableTask,
+                  taskEdits: todo.taskEdits,
+                  taskMenuVisible: todo.taskMenuVisible,
+                  newTask: todo.newTask || "",
+                }));
+                this.tourName = importedData.tourName || "Tour Name";
+                this.tourNumber = importedData.tourNumber || "Tour Number";
+                this.tourModel = importedData.tourModel || "Day-Model";
+                this.id = importedData.id || uuid.v4();
+                this.createdAt = importedData.createdAt || new Date().toISOString();
+                this.updatedAt = new Date().toISOString();
+                localStorage.setItem("todos", JSON.stringify(importedData));
+                alert("Preset imported successfully!");
+              } catch (error) {
+                alert("Error importing preset: " + error.message);
+              }
+            };
+
+            reader.readAsText(file);
+          },
+          setDefaultTourDetails() {
+            this.tourName = "Tour Name";
+            this.tourNumber = "Tour Number";
+            this.tourModel = "Day-Model";
+          },
+          toggleTaskMenu(todo, taskIndex) {
+            this.$set(todo, "taskMenuVisible", todo.taskMenuVisible === taskIndex ? null : taskIndex);
+          },
+        },
+        mounted() {
+          this.fetchData();
+          window.addEventListener("resize", this.updateWindowWidth);
+        },
+        beforeDestroy() {
+          window.removeEventListener("resize", this.updateWindowWidth);
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+/* Global Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+    overflow-y: scroll; /* Always show vertical scrollbar */
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+h1 {
+    color: #343a40;
+    text-align: left; /* Change to left align */
+    margin-bottom: 20px;
+}
+
+/* Card Styles */
+.card-header {
+    color: white;
+}
+
+.card-header .btn-link {
+    color: white;
+    text-decoration: none;
+}
+
+.card-header .btn-link:hover {
+    color: #e2e6ea;
+}
+
+.card-body {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    color: #343a40; /* Ensure text is dark enough */
+}
+
+.card-body ul {
+    padding-left: 0;
+    list-style-type: none;
+}
+
+.card-body p {
+    margin: 0;
+}
+
+/* List Item Styles */
+.list-group-item {
+    cursor: pointer;
+    background-color: #ffffff; /* Ensure list items have a white background */
+    color: #343a40; /* Ensure text is dark enough */
+}
+
+.list-group-item.completed {
+    text-decoration: line-through;
+    color: #6c757d;
+}
+
+/* Accordion Styles */
+#accordion .card {
+    margin-bottom: 10px;
+}
+
+/* Language Selector */
+.language-switcher {
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+/* Datepicker */
+.datepicker-popup .vdp-datepicker {
+    width: 100%;
+}
+
+.datepicker-popup .vdp-datepicker__calendar {
+    background: white;
+    border: 1px solid #dee2e6;
+}
+
+/* Ensure datepicker appears upwards */
+.datepicker-upwards .vdp-datepicker__calendar {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 5px !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 767.98px) {
+    .container {
+        padding: 10px;
+    }
+
+    .card-header .btn-link {
+        font-size: 14px;
+    }
+}
+
+.completed {
+    text-decoration: line-through;
+}
+
+/* Custom Card Colors */
+.card-primary .card-header {
+    background-color: #3a3f5c; /* Lighter Dark Blue */
+}
+
+.card-secondary .card-header {
+    background-color: #2e3b4e; /* Lighter Darker Blue */
+}
+
+.card-success .card-header {
+    background-color: #1f487e; /* Lighter Dark Navy */
+}
+
+.card-danger .card-header {
+    background-color: #73556a; /* Lighter Dark Purple */
+}
+
+.card-warning .card-header {
+    background-color: #4e4e4e; /* Lighter Dark Gray */
+}
+
+.card-info .card-header {
+    background-color: #333333; /* Lighter Almost Black */
+}
+
+.card-light .card-header {
+    background-color: #565c6d; /* Lighter Dark Gray */
+    color: white;
+}
+
+.card-dark .card-header {
+    background-color: #6a6a6a; /* Lighter Darker Gray */
+}
