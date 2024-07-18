@@ -15,10 +15,31 @@
           display: none;
         }
       }
+      .loading-bar {
+        height: 4px;
+        background-color: #007bff;
+        animation: loading 2s linear infinite;
+      }
+
+      @keyframes loading {
+        0% {
+          left: -100%;
+          width: 100%;
+        }
+        50% {
+          left: 25%;
+          width: 50%;
+        }
+        100% {
+          left: 100%;
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="app" class="container mt-5">
+      <div v-if="isLoading" class="loading-bar"></div>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="text-left">
           <div v-if="editableTourDetails">
@@ -45,22 +66,10 @@
         </button>
       </div>
       <div v-show="buttonGroupVisible" class="mb-4">
-        <button class="btn btn-success mr-2" @click="savePreset">
-          <i class="fas fa-save"></i>
-          <span class="d-none d-sm-inline"> Save</span>
-        </button>
-        <button class="btn btn-danger mr-2" @click="deletePreset">
-          <i class="fas fa-trash"></i>
-          <span class="d-none d-sm-inline"> Delete</span>
-        </button>
-        <button class="btn btn-secondary mr-2" @click="exportPreset">
-          <i class="fas fa-file-export"></i>
-          <span class="d-none d-sm-inline"> Export</span>
-        </button>
-        <input type="file" id="fileInput" class="d-none" @change="importPreset" />
-        <button class="btn btn-info mr-2" @click="triggerFileInput">
-          <i class="fas fa-file-import"></i>
-          <span class="d-none d-sm-inline"> Import</span>
+        <input type="file" id="pdfInput" class="d-none" @change="importPdf" />
+        <button class="btn btn-warning" @click="triggerPdfInput">
+          <i class="fas fa-file-pdf"></i>
+          <span class="d-none d-sm-inline"> Import PDF</span>
         </button>
         <button class="btn btn-warning" @click="toggleExpandAll">
           <i class="fas fa-expand"></i>
@@ -88,7 +97,6 @@
               </button>
             </div>
           </div>
-
           <div
             :id="'collapse' + todoIndex"
             class="collapse"
@@ -201,6 +209,7 @@
           id: uuid.v4(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          isLoading: false,
         },
         computed: {
           isSmallScreen() {
@@ -263,37 +272,23 @@
             return ["#3a3f5c", "#2e3b4e", "#1f487e", "#73556a", "#4e4e4e", "#333333", "#565c6d", "#6a6a6a"];
           },
           fetchData() {
-            const savedData = localStorage.getItem("todos");
-            if (savedData) {
-              const data = JSON.parse(savedData);
-              this.todos = data.todos.map((todo) => ({
-                ...todo,
+            // Dummy data for initial load
+            const currentDate = new Date();
+            this.todos = [
+              {
+                name: "",
+                startDate: currentDate,
+                tasks: ["Task 1", "Task 2", "Task 3"],
+                completedTasks: [],
+                editableTask: null,
+                taskEdits: "",
+                taskMenuVisible: null,
                 newTask: "",
-              }));
-              this.tourName = data.tourName || "Tour Name";
-              this.tourNumber = data.tourNumber || "Tour Number";
-              this.tourModel = data.tourModel || "Day-Model";
-              this.id = data.id || uuid.v4();
-              this.createdAt = data.createdAt || new Date().toISOString();
-              this.updatedAt = data.updatedAt || new Date().toISOString();
-            } else {
-              const currentDate = new Date();
-              this.todos = [
-                {
-                  name: "",
-                  startDate: currentDate,
-                  tasks: ["Task 1", "Task 2", "Task 3"],
-                  completedTasks: [],
-                  editableTask: null,
-                  taskEdits: "",
-                  taskMenuVisible: null,
-                  newTask: "",
-                },
-              ];
-              this.todos.forEach(() => {
-                this.collapseStatus.push(false);
-              });
-            }
+              },
+            ];
+            this.todos.forEach(() => {
+              this.collapseStatus.push(false);
+            });
           },
           addTask(todo) {
             if (todo.newTask.trim()) {
@@ -341,7 +336,6 @@
             }
             this.updatedAt = new Date().toISOString();
           },
-
           editHeader(index, name) {
             this.editableHeader = index;
             this.headerEdits = name;
@@ -360,106 +354,72 @@
           },
           getDisabledDates() {
             const today = new Date();
-            today.setHours(0, 0, 0, 0); 
+            today.setHours(0, 0, 0, 0);
             const yesterday = new Date(today);
-            yesterday.setDate(today.getDate() - 1); 
+            yesterday.setDate(today.getDate() - 1);
             return {
               to: yesterday,
             };
           },
-          savePreset() {
-            const data = {
-              id: this.id,
-              todos: this.todos,
-              tourName: this.tourName,
-              tourNumber: this.tourNumber,
-              tourModel: this.tourModel,
-              createdAt: this.createdAt,
-              updatedAt: new Date().toISOString(),
-            };
-            localStorage.setItem("todos", JSON.stringify(data));
-            alert("Preset saved successfully!");
+          triggerPdfInput() {
+            document.getElementById("pdfInput").click();
           },
-          deletePreset() {
-            localStorage.removeItem("todos");
-            this.setDefaultTourDetails();
-            alert("Preset deleted successfully!");
-            this.fetchData();
-          },
-          exportPreset() {
-            const totalTasks = this.todos.reduce((total, todo) => total + todo.tasks.length, 0);
-            const totalCompletedTasks = this.todos.reduce((total, todo) => total + todo.completedTasks.length, 0);
-            const data = {
-              id: this.id,
-              tourName: this.tourName,
-              tourNumber: this.tourNumber,
-              tourModel: this.tourModel,
-              totalTodos: this.todos.length,
-              totalTasks: totalTasks,
-              totalCompletedTasks: totalCompletedTasks,
-              createdAt: this.createdAt,
-              updatedAt: new Date().toISOString(),
-              todos: this.todos.map((todo) => ({
-                name: todo.name,
-                startDate: todo.startDate,
-                tasks: todo.tasks,
-                completedTasks: todo.completedTasks,
-                editableTask: todo.editableTask,
-                taskEdits: todo.taskEdits,
-                taskMenuVisible: todo.taskMenuVisible,
-                newTask: todo.newTask,
-              })),
-            };
-            const dataStr = JSON.stringify(data);
-            const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-
-            const exportFileDefaultName = `${this.tourName}_${this.tourNumber}_${this.tourModel}.json`;
-
-            const linkElement = document.createElement("a");
-            linkElement.setAttribute("href", dataUri);
-            linkElement.setAttribute("download", exportFileDefaultName);
-            linkElement.click();
-          },
-          triggerFileInput() {
-            document.getElementById("fileInput").click();
-          },
-          importPreset(event) {
+          async importPdf(event) {
             const file = event.target.files[0];
-            const reader = new FileReader();
+            const formData = new FormData();
+            formData.append("file", file);
 
-            reader.onload = (e) => {
-              const contents = e.target.result;
-              try {
-                const importedData = JSON.parse(contents);
-                this.todos = importedData.todos.map((todo) => ({
-                  name: todo.name,
-                  startDate: todo.startDate,
-                  tasks: todo.tasks,
-                  completedTasks: todo.completedTasks,
-                  editableTask: todo.editableTask,
-                  taskEdits: todo.taskEdits,
-                  taskMenuVisible: todo.taskMenuVisible,
-                  newTask: todo.newTask || "",
-                }));
-                this.tourName = importedData.tourName || "Tour Name";
-                this.tourNumber = importedData.tourNumber || "Tour Number";
-                this.tourModel = importedData.tourModel || "Day-Model";
-                this.id = importedData.id || uuid.v4();
-                this.createdAt = importedData.createdAt || new Date().toISOString();
-                this.updatedAt = new Date().toISOString();
-                localStorage.setItem("todos", JSON.stringify(importedData));
-                alert("Preset imported successfully!");
-              } catch (error) {
-                alert("Error importing preset: " + error.message);
+            this.isLoading = true;  // Показваме лоадинг лентата
+
+            try {
+              const response = await fetch("http://localhost:5000/extract-pdf", {
+                method: "POST",
+                body: formData,
+              });
+
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
               }
-            };
 
-            reader.readAsText(file);
+              const pdfData = await response.json();
+              // Логни извлечените данни от PDF
+              console.log("Extracted PDF Data:", pdfData);
+
+              // Clear existing todos before importing new ones
+              this.todos = [];
+
+              this.populateFromPdfData(pdfData);
+            } catch (error) {
+              console.error("Error importing PDF:", error);
+              alert("Error importing PDF: " + error.message);
+            } finally {
+              this.isLoading = false;  // Скрити лоадинг лентата
+            }
           },
-          setDefaultTourDetails() {
-            this.tourName = "Tour Name";
-            this.tourNumber = "Tour Number";
-            this.tourModel = "Day-Model";
+          populateFromPdfData(pdfData) {
+            // Логни данните, които ще бъдат използвани за попълване на задачите
+            console.log("Populating from PDF Data:", pdfData);
+
+            this.todos = pdfData.map((item, index) => ({
+              id: index,
+              name: item.title || "Unnamed Task",
+              startDate: new Date(),
+              tasks: [
+                `Beginn: ${item.details.Beginn}`,
+                `Ende: ${item.details.Ende}`,
+                `Abhol: ${item.details.Abhol}`,
+                `Dauer: ${item.details.Dauer}`,
+                `BK-Typ: ${item.details["BK-Typ"]}`,
+                `Schliessung: ${item.details.Schliessung}`,
+                `Bemerkungen: ${item.details.Bemerkungen}`,
+              ],
+              completedTasks: [],
+              editableTask: null,
+              taskEdits: "",
+              taskMenuVisible: null,
+              newTask: "",
+            }));
+            this.updatedAt = new Date().toISOString();
           },
           toggleTaskMenu(todo, taskIndex) {
             this.$set(todo, "taskMenuVisible", todo.taskMenuVisible === taskIndex ? null : taskIndex);
