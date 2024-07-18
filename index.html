@@ -329,7 +329,6 @@
               }
 
               const pdfData = await response.json();
-              console.log("Extracted PDF Data:", pdfData);
 
               this.todos = [];
               this.headerText = pdfData.header_text || "";
@@ -338,15 +337,12 @@
 
               this.populateFromPdfData(pdfData.tables);
             } catch (error) {
-              console.error("Error importing PDF:", error);
               alert("Error importing PDF: " + error.message);
             } finally {
               this.isLoading = false;
             }
           },
           populateFromPdfData(pdfData) {
-            console.log("Populating from PDF Data:", pdfData);
-
             this.todos = pdfData.map((item, index) => ({
               id: index,
               name: item.title || "Unnamed Task",
