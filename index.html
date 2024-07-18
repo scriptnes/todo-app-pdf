@@ -25,8 +25,15 @@
     <div id="app" class="container mt-5" v-cloak>
       <div v-if="isLoading" class="loading-bar"></div>
       <div v-if="specificInfo.length" class="alert alert-info">
-        <h1 class="specific-info mb-0">{{ specificInfo[0] }}</h1>
-        <h4 class="todo-header">Todo List - {{ totalTodos }}</h4>
+        <h1 class="specific-info mb-0" v-if="!isEditingSpecificInfo">{{ specificInfo[0] }}</h1>
+        <div v-else>
+          <input v-model="editableSpecificInfo" class="form-control mb-2" />
+          <button class="btn btn-sm btn-success mr-2" @click="saveSpecificInfoEdit">Save</button>
+          <button class="btn btn-sm btn-secondary" @click="cancelSpecificInfoEdit">Cancel</button>
+        </div>
+        <button class="btn btn-sm btn-warning" @click="editSpecificInfo" v-if="!isEditingSpecificInfo">
+          <i class="fas fa-edit"></i>
+        </button>
       </div>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="text-left">
@@ -36,7 +43,7 @@
         </div>
       </div>
       <div v-show="buttonGroupVisible" class="mb-4">
-        <input type="file" id="pdfInput" class="d-none" @change="importPdf" />
+        <input type="file" id="pdfInput" class="d-none" @change="validatePdf" accept="application/pdf" />
         <button class="btn btn-warning" @click="triggerPdfInput">
           <i class="fas fa-file-pdf"></i>
           <span class="d-none d-sm-inline"> Import PDF</span>
@@ -155,7 +162,7 @@
     <script src="https://unpkg.com/vuejs-datepicker"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script type="module">
-      import config from './config/config.js';
+      import config from "./config/config.js";
 
       Vue.component("vuejs-datepicker", window.vuejsDatepicker);
 
@@ -185,6 +192,8 @@
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isLoading: false,
+          isEditingSpecificInfo: false,
+          editableSpecificInfo: "",
         },
         computed: {
           isSmallScreen() {
@@ -322,6 +331,23 @@
           triggerPdfInput() {
             document.getElementById("pdfInput").click();
           },
+          validatePdf(event) {
+            const file = event.target.files[0];
+
+            if (file.type !== "application/pdf") {
+              alert("Please upload a valid PDF file.");
+              return;
+            }
+
+            const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSizeInBytes) {
+              alert("The file size should not exceed 5MB.");
+              return;
+            }
+
+            this.importPdf(event);
+          },
+
           async importPdf(event) {
             const file = event.target.files[0];
             const formData = new FormData();
@@ -375,6 +401,19 @@
           },
           toggleTaskMenu(todo, taskIndex) {
             this.$set(todo, "taskMenuVisible", todo.taskMenuVisible === taskIndex ? null : taskIndex);
+          },
+          editSpecificInfo() {
+            this.isEditingSpecificInfo = true;
+            this.editableSpecificInfo = this.specificInfo[0] || "";
+          },
+          saveSpecificInfoEdit() {
+            this.specificInfo[0] = this.editableSpecificInfo;
+            this.isEditingSpecificInfo = false;
+            this.editableSpecificInfo = "";
+          },
+          cancelSpecificInfoEdit() {
+            this.isEditingSpecificInfo = false;
+            this.editableSpecificInfo = "";
           },
         },
         mounted() {
