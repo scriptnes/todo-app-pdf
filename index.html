@@ -9,61 +9,20 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
     <link href="css/styles.css" rel="stylesheet" />
-    <style>
-      @media (max-width: 800px) {
-        .btn span {
-          display: none;
-        }
-      }
-      .loading-bar {
-        height: 4px;
-        background-color: #007bff;
-        animation: loading 2s linear infinite;
-      }
-
-      @keyframes loading {
-        0% {
-          left: -100%;
-          width: 100%;
-        }
-        50% {
-          left: 25%;
-          width: 50%;
-        }
-        100% {
-          left: 100%;
-          width: 100%;
-        }
-      }
-    </style>
   </head>
   <body>
     <div id="app" class="container mt-5">
       <div v-if="isLoading" class="loading-bar"></div>
+      <div v-if="specificInfo.length" class="alert alert-info">
+        <h1 class="specific-info mb-0">{{ specificInfo[0] }}</h1>
+        <h4 class="todo-header">Todo List - {{ totalTodos }}</h4>
+      </div>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="text-left">
-          <div v-if="editableTourDetails">
-            <input v-model="tourNameEdit" class="form-control mb-1" />
-            <input v-model="tourNumberEdit" class="form-control mb-1" />
-            <input v-model="tourModelEdit" class="form-control mb-1" />
-            <div class="d-flex">
-              <button class="btn btn-sm btn-success mr-2" @click="saveTourDetails">Save</button>
-              <button class="btn btn-sm btn-secondary" @click="cancelTourEdit">Cancel</button>
-            </div>
-          </div>
-          <div v-else>
-            <h1 class="mb-0">Todo List - {{ totalTodos }}</h1>
-            <h4 v-if="tourName" class="text-muted">
-              {{ tourName }} - {{ tourNumber }} - {{ tourModel }}
-              <button class="btn btn-sm btn-warning ml-2" @click="editTourDetails">
-                <i class="fas fa-edit"></i>
-              </button>
-            </h4>
-          </div>
+          <button class="btn btn-secondary" @click="toggleButtonGroup">
+            <i class="fas fa-cog"></i>
+          </button>
         </div>
-        <button class="btn btn-secondary" @click="toggleButtonGroup">
-          <i class="fas fa-cog"></i>
-        </button>
       </div>
       <div v-show="buttonGroupVisible" class="mb-4">
         <input type="file" id="pdfInput" class="d-none" @change="importPdf" />
@@ -184,13 +143,18 @@
     <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
     <script src="https://unpkg.com/vuejs-datepicker"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
-    <script>
+    <script type="module">
+      import config from './config/config.js';
+
       Vue.component("vuejs-datepicker", window.vuejsDatepicker);
 
       new Vue({
         el: "#app",
         data: {
           todos: [],
+          headerText: "",
+          fullText: [],
+          specificInfo: [],
           tourName: "Tour Name",
           tourNumber: "Tour Number",
           tourModel: "Day-Model",
@@ -230,22 +194,6 @@
             this.allExpanded = !this.allExpanded;
             this.collapseStatus = this.todos.map(() => this.allExpanded);
           },
-          editTourDetails() {
-            this.tourNameEdit = this.tourName;
-            this.tourNumberEdit = this.tourNumber;
-            this.tourModelEdit = this.tourModel;
-            this.editableTourDetails = true;
-          },
-          saveTourDetails() {
-            this.tourName = this.tourNameEdit;
-            this.tourNumber = this.tourNumberEdit;
-            this.tourModel = this.tourModelEdit;
-            this.editableTourDetails = false;
-            this.updatedAt = new Date().toISOString();
-          },
-          cancelTourEdit() {
-            this.editableTourDetails = false;
-          },
           toggleTask(todo, task) {
             const index = todo.completedTasks.indexOf(task);
             if (index === -1) {
@@ -272,7 +220,6 @@
             return ["#3a3f5c", "#2e3b4e", "#1f487e", "#73556a", "#4e4e4e", "#333333", "#565c6d", "#6a6a6a"];
           },
           fetchData() {
-            // Dummy data for initial load
             const currentDate = new Date();
             this.todos = [
               {
@@ -369,10 +316,10 @@
             const formData = new FormData();
             formData.append("file", file);
 
-            this.isLoading = true;  // Показваме лоадинг лентата
+            this.isLoading = true;
 
             try {
-              const response = await fetch("http://localhost:5000/extract-pdf", {
+              const response = await fetch(`${config.serverUrl}/extract-pdf`, {
                 method: "POST",
                 body: formData,
               });
@@ -382,22 +329,22 @@
               }
 
               const pdfData = await response.json();
-              // Логни извлечените данни от PDF
               console.log("Extracted PDF Data:", pdfData);
 
-              // Clear existing todos before importing new ones
               this.todos = [];
+              this.headerText = pdfData.header_text || "";
+              this.fullText = pdfData.full_text || [];
+              this.specificInfo = pdfData.specific_info || [];
 
-              this.populateFromPdfData(pdfData);
+              this.populateFromPdfData(pdfData.tables);
             } catch (error) {
               console.error("Error importing PDF:", error);
               alert("Error importing PDF: " + error.message);
             } finally {
-              this.isLoading = false;  // Скрити лоадинг лентата
+              this.isLoading = false;
             }
           },
           populateFromPdfData(pdfData) {
-            // Логни данните, които ще бъдат използвани за попълване на задачите
             console.log("Populating from PDF Data:", pdfData);
 
             this.todos = pdfData.map((item, index) => ({
@@ -409,8 +356,6 @@
                 `Ende: ${item.details.Ende}`,
                 `Abhol: ${item.details.Abhol}`,
                 `Dauer: ${item.details.Dauer}`,
-                `BK-Typ: ${item.details["BK-Typ"]}`,
-                `Schliessung: ${item.details.Schliessung}`,
                 `Bemerkungen: ${item.details.Bemerkungen}`,
               ],
               completedTasks: [],

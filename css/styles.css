@@ -56,6 +56,7 @@ h1 {
 .list-group-item.completed {
     text-decoration: line-through;
     color: #6c757d;
+    text-decoration-color: red; /* Промяна на цвета на линията */
 }
 
 /* Accordion Styles */
@@ -97,10 +98,6 @@ h1 {
     }
 }
 
-.completed {
-    text-decoration: line-through;
-}
-
 /* Custom Card Colors */
 .card-primary .card-header {
     background-color: #3a3f5c; /* Lighter Dark Blue */
@@ -133,4 +130,42 @@ h1 {
 
 .card-dark .card-header {
     background-color: #6a6a6a; /* Lighter Darker Gray */
+}
+
+/* Loading Bar */
+.loading-bar {
+    height: 4px;
+    background-color: #007bff;
+    animation: loading 2s linear infinite;
+}
+
+@keyframes loading {
+    0% {
+        left: -100%;
+        width: 100%;
+    }
+    50% {
+        left: 25%;
+        width: 50%;
+    }
+    100% {
+        left: 100%;
+        width: 100%;
+    }
+}
+
+/* Specific Info and Todo Header */
+.specific-info {
+    font-size: 1.5em; /* Промяна на размера на текста за специфичната информация */
+}
+
+.todo-header {
+    font-size: 1.2em; /* Промяна на размера на текста за заглавието на Todo списъка */
+}
+
+/* Media Query for Button Span */
+@media (max-width: 800px) {
+    .btn span {
+      display: none;
+    }
 }
