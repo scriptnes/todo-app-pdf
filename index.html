@@ -222,6 +222,7 @@
               todo.completedTasks.splice(index, 1);
             }
             this.updatedAt = new Date().toISOString();
+            this.saveToLocalStorage();
           },
           isTaskCompleted(todo, task) {
             return todo.completedTasks.includes(task);
@@ -240,28 +241,36 @@
             return ["#3a3f5c", "#2e3b4e", "#1f487e", "#73556a", "#4e4e4e", "#333333", "#565c6d", "#6a6a6a"];
           },
           fetchData() {
-            const currentDate = new Date();
-            this.todos = [
-              {
-                name: "",
-                startDate: currentDate,
-                tasks: ["Task 1", "Task 2", "Task 3"],
-                completedTasks: [],
-                editableTask: null,
-                taskEdits: "",
-                taskMenuVisible: null,
-                newTask: "",
-              },
-            ];
-            this.todos.forEach(() => {
-              this.collapseStatus.push(false);
-            });
+            const savedData = this.loadFromLocalStorage();
+            if (savedData) {
+              this.todos = savedData.todos || [];
+              this.headerText = savedData.headerText || "";
+              this.fullText = savedData.fullText || [];
+              this.specificInfo = savedData.specificInfo || [];
+              this.collapseStatus = this.todos.map(() => false);
+            } else {
+              const currentDate = new Date();
+              this.todos = [
+                {
+                  name: "",
+                  startDate: currentDate,
+                  tasks: ["Task 1", "Task 2", "Task 3"],
+                  completedTasks: [],
+                  editableTask: null,
+                  taskEdits: "",
+                  taskMenuVisible: null,
+                  newTask: "",
+                },
+              ];
+              this.collapseStatus = this.todos.map(() => false);
+            }
           },
           addTask(todo) {
             if (todo.newTask.trim()) {
               todo.tasks.push(todo.newTask.trim());
               todo.newTask = "";
               this.updatedAt = new Date().toISOString();
+              this.saveToLocalStorage();
             }
           },
           insertTaskBelow(todo, taskIndex) {
@@ -269,6 +278,7 @@
             if (newTask && newTask.trim()) {
               todo.tasks.splice(taskIndex + 1, 0, newTask.trim());
               this.updatedAt = new Date().toISOString();
+              this.saveToLocalStorage();
             }
           },
           editTask(todo, taskIndex, task) {
@@ -282,6 +292,7 @@
               todo.editableTask = null;
               todo.taskEdits = "";
               this.updatedAt = new Date().toISOString();
+              this.saveToLocalStorage();
             }
           },
           cancelTaskEdit(todo) {
@@ -291,6 +302,7 @@
           deleteTask(todo, taskIndex) {
             todo.tasks.splice(taskIndex, 1);
             this.updatedAt = new Date().toISOString();
+            this.saveToLocalStorage();
           },
           moveTaskDown(todo, taskIndex) {
             const task = todo.tasks.splice(taskIndex, 1)[0];
@@ -302,6 +314,7 @@
               todo.tasks.splice(newIndex, 0, task);
             }
             this.updatedAt = new Date().toISOString();
+            this.saveToLocalStorage();
           },
           editHeader(index, name) {
             this.editableHeader = index;
@@ -313,6 +326,7 @@
               this.editableHeader = null;
               this.headerEdits = "";
               this.updatedAt = new Date().toISOString();
+              this.saveToLocalStorage();
             }
           },
           cancelHeaderEdit() {
@@ -345,9 +359,9 @@
               return;
             }
 
+            this.clearLocalStorage();
             this.importPdf(event);
           },
-
           async importPdf(event) {
             const file = event.target.files[0];
             const formData = new FormData();
@@ -373,6 +387,7 @@
               this.specificInfo = pdfData.specific_info || [];
 
               this.populateFromPdfData(pdfData.tables);
+              this.saveToLocalStorage(); // Save to localStorage after successful import
             } catch (error) {
               alert("Error importing PDF: " + error.message);
             } finally {
@@ -410,10 +425,27 @@
             this.specificInfo[0] = this.editableSpecificInfo;
             this.isEditingSpecificInfo = false;
             this.editableSpecificInfo = "";
+            this.saveToLocalStorage();
           },
           cancelSpecificInfoEdit() {
             this.isEditingSpecificInfo = false;
             this.editableSpecificInfo = "";
+          },
+          saveToLocalStorage() {
+            const data = {
+              todos: this.todos,
+              headerText: this.headerText,
+              fullText: this.fullText,
+              specificInfo: this.specificInfo,
+            };
+            localStorage.setItem("pdfData", JSON.stringify(data));
+          },
+          loadFromLocalStorage() {
+            const savedData = localStorage.getItem("pdfData");
+            return savedData ? JSON.parse(savedData) : null;
+          },
+          clearLocalStorage() {
+            localStorage.removeItem("pdfData");
           },
         },
         mounted() {
