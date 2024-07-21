@@ -251,7 +251,6 @@
             },
             methods: {
               logColorChange(colorType, colorValue) {
-                console.log(`${colorType} changed to: ${colorValue}`);
               },
               updateWindowWidth() {
                 this.windowWidth = window.innerWidth;
@@ -319,7 +318,6 @@
                 return gradientPalette;
               },
               applyGradientColors() {
-                console.log("Applying colors:", this.startColor, this.endColor);
                 this.saveToLocalStorage(); // Save the new colors to localStorage
                 this.$forceUpdate(); // Force Vue to re-render and apply new styles
               },
@@ -546,8 +544,6 @@
                 if (window.location.hostname === "localhost") {
                   try {
                     const response = await axios.get("/config");
-                    console.log("Server config response:", response);
-                    console.log("Server URL:", response.data.serverUrl);
                     this.serverUrl = response.data.serverUrl;
                   } catch (error) {
                     console.error("Error fetching server config:", error);
@@ -555,9 +551,7 @@
                 } else {
                   try {
                     const config = await import("./static/config/config.production.js");
-                    console.log("Config loaded:", config.default);
                     this.serverUrl = config.default.serverUrl;
-                    console.log("Server URL from production config:", this.serverUrl);
                   } catch (error) {
                     console.error("Error loading production config:", error);
                   }
