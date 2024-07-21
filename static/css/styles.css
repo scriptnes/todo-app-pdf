@@ -206,3 +206,7 @@ body {
     color: #212529; /* Ensure text color is dark */
   }
   
+  .btn-left-spacing {
+    margin-left: 10px; /* Можете да регулирате стойността на разстоянието, ако е необходимо */
+  }
+  
