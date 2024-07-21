@@ -197,9 +197,9 @@
     <script type="module">
       let configPath;
       if (window.location.hostname === "localhost") {
-        configPath = "./static/config/config.local.js";
+        configPath = "/static/config/config.local.js";
       } else {
-        configPath = "./static/config/config.production.js";
+        configPath = "/static/config/config.production.js";
       }
 
       import(configPath)
