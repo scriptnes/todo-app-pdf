@@ -549,12 +549,23 @@
                 return yiq >= 128 ? "black" : "white";
               },
               async fetchServerConfig() {
-                try {
-                  const response = await axios.get("config");
-                  console.log("Server URL:", response.data.serverUrl);
-                  this.serverUrl = response.data.serverUrl;
-                } catch (error) {
-                  console.error("Error fetching server config:", error);
+                if (window.location.hostname === "localhost") {
+                  try {
+                    const response = await axios.get("/config");
+                    console.log("Server config response:", response);
+                    console.log("Server URL:", response.data.serverUrl);
+                    this.serverUrl = response.data.serverUrl;
+                  } catch (error) {
+                    console.error("Error fetching server config:", error);
+                  }
+                } else {
+                  try {
+                    const config = await import("./static/config/config.production.js");
+                    this.serverUrl = config.serverUrl;
+                    console.log("Server URL from production config:", this.serverUrl);
+                  } catch (error) {
+                    console.error("Error loading production config:", error);
+                  }
                 }
               },
             },
