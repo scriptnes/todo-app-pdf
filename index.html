@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Todo App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="./static/favicon/favicon.ico" />
     <link rel="stylesheet" href="https://unpkg.com/vue2-datepicker/index.css" />
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
@@ -550,8 +550,7 @@
               },
               async fetchServerConfig() {
                 try {
-                  const response = await axios.get("/config");
-                  console.log("Server config response:", response);
+                  const response = await axios.get("config");
                   console.log("Server URL:", response.data.serverUrl);
                   this.serverUrl = response.data.serverUrl;
                 } catch (error) {
