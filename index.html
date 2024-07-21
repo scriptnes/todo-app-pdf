@@ -100,8 +100,12 @@
               <button class="btn btn-sm btn-warning" @click.stop="editHeader(todoIndex, todo.name)">
                 <i class="fas fa-edit"></i>
               </button>
+              <button class="btn btn-sm btn-info" @click="openGoogleMaps(todo.name)">
+                <i class="fas fa-map-marker-alt"></i>
+              </button>
             </div>
           </div>
+
           <div
             :id="'collapse' + todoIndex"
             class="collapse"
@@ -250,8 +254,7 @@
               },
             },
             methods: {
-              logColorChange(colorType, colorValue) {
-              },
+              logColorChange(colorType, colorValue) {},
               updateWindowWidth() {
                 this.windowWidth = window.innerWidth;
               },
@@ -481,7 +484,7 @@
               populateFromPdfData(pdfData) {
                 this.todos = pdfData.map((item, index) => ({
                   id: index,
-                  name: item.title || "Unnamed Task",
+                  name: item.address || "Unnamed Task", // предполагайки, че 'address' е ключ в импортираните данни
                   startDate: new Date(),
                   tasks: [
                     `Beginn: ${item.details.Beginn}`,
@@ -498,6 +501,7 @@
                 }));
                 this.updatedAt = new Date().toISOString();
               },
+
               toggleTaskMenu(todo, taskIndex) {
                 this.$set(todo, "taskMenuVisible", todo.taskMenuVisible === taskIndex ? null : taskIndex);
               },
@@ -556,6 +560,20 @@
                     console.error("Error loading production config:", error);
                   }
                 }
+              },
+              extractAddress(text) {
+                // Регекс за извличане на последната част от текста, която най-вероятно е адрес
+                const regex = /(?:.*,)?\s*([^,]*\d+[^,]*),\s*([^,]+)$/;
+                const match = text.match(regex);
+                if (match) {
+                  return `${match[1]}, ${match[2]}`.trim();
+                }
+                return text;
+              },
+              openGoogleMaps(address) {
+                const extractedAddress = this.extractAddress(address);
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(extractedAddress)}`;
+                window.open(url, "_blank");
               },
             },
             async mounted() {
