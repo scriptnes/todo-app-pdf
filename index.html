@@ -246,8 +246,8 @@
               isLoading: false,
               isEditingSpecificInfo: false,
               editableSpecificInfo: "",
-              startColor: "#336699", // Default start color
-              endColor: "#000033", // Default end color
+              startColor: "#336699", 
+              endColor: "#000033", 
             },
             computed: {
               isSmallScreen() {
@@ -335,13 +335,13 @@
                 return gradient;
               },
               generateDarkColors() {
-                const steps = this.todos.length; // Use the number of todos for the gradient steps
+                const steps = this.todos.length; 
                 const gradientPalette = this.generateGradientColors(this.startColor, this.endColor, steps);
                 return gradientPalette;
               },
               applyGradientColors() {
-                this.saveToLocalStorage(); // Save the new colors to localStorage
-                this.$forceUpdate(); // Force Vue to re-render and apply new styles
+                this.saveToLocalStorage(); 
+                this.$forceUpdate(); 
               },
               fetchData() {
                 const savedData = this.loadFromLocalStorage();
@@ -424,16 +424,13 @@
               },
               editHeader(index, name) {
                 this.editableHeader = index;
-                // Уверяваме се, че текстът за редакция е точно копие на оригиналния текст
                 this.headerEdits = name;
               },
               saveHeaderEdit(index) {
                 if (this.headerEdits.trim()) {
                   this.$set(this.todos[index], "name", this.headerEdits.trim());
                   const extractedAddress = this.extractAddress(this.headerEdits.trim());
-                  console.log("Extracted Address:", extractedAddress);
                   const isAddress = this.isValidAddress(extractedAddress);
-                  console.log("Is Valid Address:", isAddress);
                   this.$set(this.todos[index], "address", isAddress ? extractedAddress : "");
                   this.$set(this.todos[index], "isAddress", isAddress);
                   this.editableHeader = null;
@@ -500,8 +497,8 @@
                   this.specificInfo = pdfData.specific_info || [];
 
                   this.populateFromPdfData(pdfData.tables);
-                  this.saveToLocalStorage(); // Save to localStorage after successful import
-                  this.buttonGroupVisible = false; // Close the button group after successful import
+                  this.saveToLocalStorage(); 
+                  this.buttonGroupVisible = false; 
                 } catch (error) {
                   alert("Error importing PDF: " + error.message);
                 } finally {
@@ -512,11 +509,11 @@
                 this.todos = pdfData.map((item, index) => {
                   const title = item.title || "Unnamed Task";
                   const extractedAddress = this.extractAddress(title);
-                  const isAddress = this.isValidAddress(extractedAddress); // Validate address
+                  const isAddress = this.isValidAddress(extractedAddress); 
                   return {
                     id: index,
-                    name: title, // Original title from PDF
-                    address: isAddress ? extractedAddress : "", // Extracted address if valid
+                    name: title, 
+                    address: isAddress ? extractedAddress : "", 
                     isAddress: isAddress,
                     startDate: new Date(),
                     tasks: [
@@ -596,22 +593,17 @@
                 }
               },
               extractAddress(text) {
-                // Регекс за извличане на адрес
                 const regex = /(?:.*,)?\s*([^,]*\d+[^,]*),\s*([^,]+)$/;
                 const match = text.match(regex);
                 if (match) {
-                  console.log("Extract Address Function:", match[1], match[2]);
                   return `${match[1]}, ${match[2]}`.trim();
                 }
-                console.log("Extract Address Function: No match found");
-                return ""; // Връщаме празен низ, ако не можем да извлечем адреса
+                return ""; 
               },
 
               isValidAddress(address) {
-                // Регекс за проверка на валидността на адреса
-                const addressRegex = /\d+\s+\w+/; // Може да се промени за по-добра проверка
+                const addressRegex = /\d+\s+\w+/; 
                 const isValid = addressRegex.test(address);
-                console.log("Is Valid Address Function:", address, isValid);
                 return isValid;
               },
               openGoogleMaps(address) {
@@ -625,7 +617,6 @@
               validateTodosAddresses() {
                 this.todos.forEach((todo, index) => {
                   const extractedAddress = this.extractAddress(todo.name);
-                  console.log("Validate Todos Addresses:", todo.name, extractedAddress);
                   const isAddress = this.isValidAddress(extractedAddress);
                   this.$set(this.todos[index], "address", isAddress ? extractedAddress : "");
                   this.$set(this.todos[index], "isAddress", isAddress);
@@ -633,7 +624,7 @@
               },
             },
             async mounted() {
-              await this.fetchServerConfig(); // Fetch server config on mount
+              await this.fetchServerConfig(); 
               this.fetchData();
               window.addEventListener("resize", this.updateWindowWidth);
             },
