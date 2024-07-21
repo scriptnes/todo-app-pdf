@@ -197,9 +197,9 @@
     <script type="module">
       let configPath;
       if (window.location.hostname === "localhost") {
-        configPath = "/static/config/config.local.js";
+        configPath = "./static/config/config.local.js";
       } else {
-        configPath = "/static/config/config.production.js";
+        configPath = "./static/config/config.production.js";
       }
 
       import(configPath)
@@ -250,18 +250,6 @@
               },
             },
             methods: {
-              fetchServerConfig() {
-                console.log("Fetching server config");
-                axios.get("/config")
-                  .then((response) => {
-                    console.log("Server config response:", response);
-                    console.log("Server URL:", response.data.serverUrl);
-                    this.serverUrl = response.data.serverUrl;
-                  })
-                  .catch((error) => {
-                    console.error("Error fetching server config:", error);
-                  });
-              },
               logColorChange(colorType, colorValue) {
                 console.log(`${colorType} changed to: ${colorValue}`);
               },
@@ -560,9 +548,19 @@
                 const yiq = (r * 299 + g * 587 + b * 114) / 1000;
                 return yiq >= 128 ? "black" : "white";
               },
+              async fetchServerConfig() {
+                try {
+                  const response = await axios.get("/config");
+                  console.log("Server config response:", response);
+                  console.log("Server URL:", response.data.serverUrl);
+                  this.serverUrl = response.data.serverUrl;
+                } catch (error) {
+                  console.error("Error fetching server config:", error);
+                }
+              },
             },
             async mounted() {
-              this.fetchServerConfig(); // Fetch server config on mount
+              await this.fetchServerConfig(); // Fetch server config on mount
               this.fetchData();
               window.addEventListener("resize", this.updateWindowWidth);
             },
