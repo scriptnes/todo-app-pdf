@@ -47,17 +47,18 @@ body {
   }
   
   /* List Item Styles */
-  .list-group-item {
+.list-group-item {
     cursor: pointer;
     background-color: #ffffff; /* Ensure list items have a white background */
     color: #343a40; /* Ensure text is dark enough */
   }
   
-  .list-group-item.completed {
+  .list-group-item .task-text.completed {
     text-decoration: line-through;
-    color: #6c757d;
-    text-decoration-color: red; /* Промяна на цвета на линията */
+    text-decoration-color: red; /* Change the strike-through color to red */
+    color: #6c757d; /* Optional: Change the text color of completed tasks */
   }
+  
   
   /* Accordion Styles */
   #accordion .card {
