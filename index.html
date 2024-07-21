@@ -100,12 +100,11 @@
               <button class="btn btn-sm btn-warning" @click.stop="editHeader(todoIndex, todo.name)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-sm btn-info btn-left-spacing" @click="openGoogleMaps(todo.name)">
+              <button class="btn btn-sm btn-info btn-left-spacing" :disabled="!todo.isAddress" @click="openGoogleMaps(todo.address)">
                 <i class="fas fa-map-marker-alt"></i>
               </button>
             </div>
           </div>
-
           <div
             :id="'collapse' + todoIndex"
             class="collapse"
@@ -412,7 +411,6 @@
                   this.editableHeader = null;
                   this.headerEdits = "";
                   this.updatedAt = new Date().toISOString();
-                  this.saveToLocalStorage();
                 }
               },
               cancelHeaderEdit() {
@@ -482,26 +480,33 @@
                 }
               },
               populateFromPdfData(pdfData) {
-                this.todos = pdfData.map((item, index) => ({
-                  id: index,
-                  name: item.address || "Unnamed Task", // предполагайки, че 'address' е ключ в импортираните данни
-                  startDate: new Date(),
-                  tasks: [
-                    `Beginn: ${item.details.Beginn}`,
-                    `Ende: ${item.details.Ende}`,
-                    `Abhol: ${item.details.Abhol}`,
-                    `Dauer: ${item.details.Dauer}`,
-                    `Bemerkungen: ${item.details.Bemerkungen}`,
-                  ],
-                  completedTasks: [],
-                  editableTask: null,
-                  taskEdits: "",
-                  taskMenuVisible: null,
-                  newTask: "",
-                }));
+                this.todos = pdfData.map((item, index) => {
+                  console.log(item.title);
+                  const title = item.title || "Unnamed Task";
+                  const extractedAddress = this.extractAddress(title);
+                  const isAddress = extractedAddress !== title; // Проверка дали е извлечен валиден адрес
+                  return {
+                    id: index,
+                    name: title, // Оригиналното заглавие от PDF
+                    address: isAddress ? extractedAddress : "", // Екстрактнатият адрес, ако е валиден
+                    isAddress: isAddress,
+                    startDate: new Date(),
+                    tasks: [
+                      `Beginn: ${item.details.Beginn || ""}`,
+                      `Ende: ${item.details.Ende || ""}`,
+                      `Abhol: ${item.details.Abhol || ""}`,
+                      `Dauer: ${item.details.Dauer || ""}`,
+                      `Bemerkungen: ${item.details.Bemerkungen || ""}`,
+                    ],
+                    completedTasks: [],
+                    editableTask: null,
+                    taskEdits: "",
+                    taskMenuVisible: null,
+                    newTask: "",
+                  };
+                });
                 this.updatedAt = new Date().toISOString();
               },
-
               toggleTaskMenu(todo, taskIndex) {
                 this.$set(todo, "taskMenuVisible", todo.taskMenuVisible === taskIndex ? null : taskIndex);
               },
@@ -568,11 +573,10 @@
                 if (match) {
                   return `${match[1]}, ${match[2]}`.trim();
                 }
-                return text;
+                return text; // Връщаме оригиналния текст, ако не можем да извлечем адреса
               },
               openGoogleMaps(address) {
-                const extractedAddress = this.extractAddress(address);
-                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(extractedAddress)}`;
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
                 window.open(url, "_blank");
               },
             },

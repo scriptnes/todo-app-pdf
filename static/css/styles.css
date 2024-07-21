@@ -209,4 +209,9 @@ body {
   .btn-left-spacing {
     margin-left: 10px; /* Можете да регулирате стойността на разстоянието, ако е необходимо */
   }
+
+  .btn-info:disabled .fas.fa-map-marker-alt {
+    color: gray;
+  }
+  
   
