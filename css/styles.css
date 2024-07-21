@@ -158,8 +158,11 @@ body {
   
   /* Specific Info and Todo Header */
   .specific-info {
-    font-size: 1.5em; /* Промяна на размера на текста за специфичната информация */
+    font-size: 1.5em; /* Adjust the size as needed */
+    flex-grow: 1;
+    margin: 0; /* Ensure no margins interfere with alignment */
   }
+  
   
   .todo-header {
     font-size: 1.2em; /* Промяна на размера на текста за заглавието на Todo списъка */
