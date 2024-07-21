@@ -69,7 +69,7 @@
             </div>
             <div v-else class="d-flex justify-content-between align-items-center w-100">
               <h5 class="mb-0 flex-grow-1">
-                <button class="btn btn-link" @click="toggleCollapse(todoIndex)" :style="{ color: getContrastingColor(getCardStyle(todoIndex).backgroundColor) }">
+                <button class="btn btn-link" @click="toggleCollapse(todoIndex)" :style="{ color: todo.name ? getContrastingColor(getCardStyle(todoIndex).backgroundColor) : '#343a40' }">
                   {{ todo.name || 'Enter your name here..' }}
                 </button>
               </h5>
