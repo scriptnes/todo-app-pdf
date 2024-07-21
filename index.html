@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/vue2-datepicker/index.css" />
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
-    <link href="./static/css/styles.css" rel="stylesheet">
+    <link href="./static/css/styles.css" rel="stylesheet" />
   </head>
   <body>
     <div id="app" class="container mt-5" v-cloak>
@@ -309,19 +309,13 @@
                   const r = Math.round(start.r + stepFactor * i * (end.r - start.r));
                   const g = Math.round(start.g + stepFactor * i * (end.g - start.g));
                   const b = Math.round(start.b + stepFactor * i * (end.b - start.b));
-                  gradient.push(
-                    `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
-                  );
+                  gradient.push(`#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`);
                 }
                 return gradient;
               },
               generateDarkColors() {
                 const steps = this.todos.length; // Use the number of todos for the gradient steps
-                const gradientPalette = this.generateGradientColors(
-                  this.startColor,
-                  this.endColor,
-                  steps
-                );
+                const gradientPalette = this.generateGradientColors(this.startColor, this.endColor, steps);
                 return gradientPalette;
               },
               applyGradientColors() {
@@ -561,7 +555,8 @@
                 } else {
                   try {
                     const config = await import("./static/config/config.production.js");
-                    this.serverUrl = config.serverUrl;
+                    console.log("Config loaded:", config.default);
+                    this.serverUrl = config.default.serverUrl;
                     console.log("Server URL from production config:", this.serverUrl);
                   } catch (error) {
                     console.error("Error loading production config:", error);
