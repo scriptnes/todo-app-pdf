@@ -1,171 +1,204 @@
 /* Global Styles */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
     background-color: #f8f9fa;
     overflow-y: scroll; /* Always show vertical scrollbar */
-}
-
-.container {
+  }
+  
+  .container {
     max-width: 800px;
     margin: 0 auto;
     padding-top: 20px;
-}
-
-h1 {
+  }
+  
+  h1 {
     color: #343a40;
     text-align: left; /* Change to left align */
     margin-bottom: 20px;
-}
-
-/* Card Styles */
-.card-header {
-    color: white;
-}
-
-.card-header .btn-link {
-    color: white;
+  }
+  
+  /* Card Styles */
+  .card-header {
+    color: #343a40; /* Ensure text color is dark */
+  }
+  
+  .card-header .btn-link {
+    color: inherit; /* Use inherited color */
     text-decoration: none;
-}
-
-.card-header .btn-link:hover {
-    color: #e2e6ea;
-}
-
-.card-body {
+  }
+  
+  .card-header .btn-link:hover {
+    color: inherit; /* Ensure hover uses the same calculated color */
+  }
+  
+  .card-body {
     background-color: #ffffff;
     border: 1px solid #dee2e6;
     color: #343a40; /* Ensure text is dark enough */
-}
-
-.card-body ul {
+  }
+  
+  .card-body ul {
     padding-left: 0;
     list-style-type: none;
-}
-
-.card-body p {
+  }
+  
+  .card-body p {
     margin: 0;
-}
-
-/* List Item Styles */
-.list-group-item {
+  }
+  
+  /* List Item Styles */
+  .list-group-item {
     cursor: pointer;
     background-color: #ffffff; /* Ensure list items have a white background */
     color: #343a40; /* Ensure text is dark enough */
-}
-
-.list-group-item.completed {
+  }
+  
+  .list-group-item.completed {
     text-decoration: line-through;
     color: #6c757d;
     text-decoration-color: red; /* Промяна на цвета на линията */
-}
-
-/* Accordion Styles */
-#accordion .card {
+  }
+  
+  /* Accordion Styles */
+  #accordion .card {
     margin-bottom: 10px;
-}
-
-/* Language Selector */
-.language-switcher {
+  }
+  
+  /* Language Selector */
+  .language-switcher {
     text-align: right;
     margin-bottom: 10px;
-}
-
-/* Datepicker */
-.datepicker-popup .vdp-datepicker {
+  }
+  
+  /* Datepicker */
+  .datepicker-popup .vdp-datepicker {
     width: 100%;
-}
-
-.datepicker-popup .vdp-datepicker__calendar {
+  }
+  
+  .datepicker-popup .vdp-datepicker__calendar {
     background: white;
     border: 1px solid #dee2e6;
-}
-
-/* Ensure datepicker appears upwards */
-.datepicker-upwards .vdp-datepicker__calendar {
+  }
+  
+  /* Ensure datepicker appears upwards */
+  .datepicker-upwards .vdp-datepicker__calendar {
     top: auto !important;
     bottom: 100% !important;
     margin-bottom: 5px !important;
-}
-
-/* Responsive Styles */
-@media (max-width: 767.98px) {
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 767.98px) {
     .container {
-        padding: 10px;
+      padding: 10px;
     }
-
+  
     .card-header .btn-link {
-        font-size: 14px;
+      font-size: 14px;
     }
-}
-
-/* Custom Card Colors */
-.card-primary .card-header {
+  }
+  
+  /* Custom Card Colors */
+  .card-primary .card-header {
     background-color: #3a3f5c; /* Lighter Dark Blue */
-}
-
-.card-secondary .card-header {
+  }
+  
+  .card-secondary .card-header {
     background-color: #2e3b4e; /* Lighter Darker Blue */
-}
-
-.card-success .card-header {
+  }
+  
+  .card-success .card-header {
     background-color: #1f487e; /* Lighter Dark Navy */
-}
-
-.card-danger .card-header {
+  }
+  
+  .card-danger .card-header {
     background-color: #73556a; /* Lighter Dark Purple */
-}
-
-.card-warning .card-header {
+  }
+  
+  .card-warning .card-header {
     background-color: #4e4e4e; /* Lighter Dark Gray */
-}
-
-.card-info .card-header {
+  }
+  
+  .card-info .card-header {
     background-color: #333333; /* Lighter Almost Black */
-}
-
-.card-light .card-header {
+  }
+  
+  .card-light .card-header {
     background-color: #565c6d; /* Lighter Dark Gray */
     color: white;
-}
-
-.card-dark .card-header {
+  }
+  
+  .card-dark .card-header {
     background-color: #6a6a6a; /* Lighter Darker Gray */
-}
-
-/* Loading Bar */
-.loading-bar {
+    color: white; /* Ensure text color is white for dark backgrounds */
+  }
+  
+  /* Loading Bar */
+  .loading-bar {
     height: 4px;
     background-color: #007bff;
     animation: loading 2s linear infinite;
-}
-
-@keyframes loading {
+  }
+  
+  @keyframes loading {
     0% {
-        left: -100%;
-        width: 100%;
+      left: -100%;
+      width: 100%;
     }
     50% {
-        left: 25%;
-        width: 50%;
+      left: 25%;
+      width: 50%;
     }
     100% {
-        left: 100%;
-        width: 100%;
+      left: 100%;
+      width: 100%;
     }
-}
-
-/* Specific Info and Todo Header */
-.specific-info {
+  }
+  
+  /* Specific Info and Todo Header */
+  .specific-info {
     font-size: 1.5em; /* Промяна на размера на текста за специфичната информация */
-}
-
-.todo-header {
+  }
+  
+  .todo-header {
     font-size: 1.2em; /* Промяна на размера на текста за заглавието на Todo списъка */
-}
-
-/* Media Query for Button Span */
-@media (max-width: 800px) {
+  }
+  
+  /* Media Query for Button Span */
+  @media (max-width: 800px) {
     .btn span {
       display: none;
     }
-}
+  }
+  
+  [v-cloak] > * {
+    display: none;
+  }
+  [v-cloak]::before {
+    content: "loading...";
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .color-settings {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    color: #343a40;
+  }
+  
+  .color-settings .btn-link {
+    color: #343a40; /* Добавяне на тъмен цвят за бутоните */
+  }
+  
+  .color-settings .btn-link:hover {
+    color: #2a2a2a; /* Тъмен цвят при задържане на бутона */
+  }
+  
+  .card {
+    background-color: #fff; /* Ensure card background is white */
+    color: #212529; /* Ensure text color is dark */
+  }
+  
