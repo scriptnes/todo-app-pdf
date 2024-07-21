@@ -17,9 +17,10 @@ def get_config():
 @app.route('/')
 @app.route('/<path:path>')
 def serve_static(path='index.html'):
-    return send_from_directory(app.static_folder, path)
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory('.', 'index.html')
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 8000))  # Зареждане на порта от .env или използване на 8000 по подразбиране
-    app.run(debug=True, port=port)
-
+    app.run(debug=True, port=8000)
