@@ -80,13 +80,14 @@
             :id="'heading' + todoIndex"
             :style="{ color: getContrastingColor(getCardStyle(todoIndex).backgroundColor) }"
           >
-            <div v-if="editableHeader === todoIndex" class="flex-grow-1">
-              <input v-model="headerEdits" class="form-control w-100" />
-              <div class="d-flex mt-2">
-                <button class="btn btn-sm btn-success mr-2" @click="saveHeaderEdit(todoIndex)">Save</button>
-                <button class="btn btn-sm btn-secondary" @click="cancelHeaderEdit()">Cancel</button>
-              </div>
+          <div v-if="editableHeader === todoIndex" class="flex-grow-1">
+            <!-- Сигуряваме се, че input полето получава точно копие на оригиналния текст -->
+            <input v-model="headerEdits" class="form-control w-100" />
+            <div class="d-flex mt-2">
+              <button class="btn btn-sm btn-success mr-2" @click="saveHeaderEdit(todoIndex)">Save</button>
+              <button class="btn btn-sm btn-secondary" @click="cancelHeaderEdit()">Cancel</button>
             </div>
+          </div>
             <div v-else class="d-flex justify-content-between align-items-center w-100">
               <h5 class="mb-0 flex-grow-1">
                 <button
@@ -100,7 +101,11 @@
               <button class="btn btn-sm btn-warning" @click.stop="editHeader(todoIndex, todo.name)">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-sm btn-info btn-left-spacing" :disabled="!todo.isAddress" @click="openGoogleMaps(todo.address)">
+              <button
+                class="btn btn-sm btn-info btn-left-spacing"
+                :disabled="!todo.isAddress"
+                @click="openGoogleMaps(todo.address)"
+              >
                 <i class="fas fa-map-marker-alt"></i>
               </button>
             </div>
@@ -204,13 +209,13 @@
       } else {
         configPath = "./static/config/config.production.js";
       }
-    
+
       import(configPath)
         .then((module) => {
           const config = module.default;
-    
+
           Vue.component("vuejs-datepicker", window.vuejsDatepicker);
-    
+
           new Vue({
             el: "#app",
             data: {
@@ -320,7 +325,7 @@
                 };
                 const stepFactor = 1 / (steps - 1);
                 const gradient = [];
-    
+
                 for (let i = 0; i < steps; i++) {
                   const r = Math.round(start.r + stepFactor * i * (end.r - start.r));
                   const g = Math.round(start.g + stepFactor * i * (end.g - start.g));
@@ -348,6 +353,7 @@
                   this.startColor = savedData.startColor || "#336699";
                   this.endColor = savedData.endColor || "#000033";
                   this.collapseStatus = this.todos.map(() => false);
+                  this.validateTodosAddresses();
                 } else {
                   const currentDate = new Date();
                   this.todos = [
@@ -407,7 +413,7 @@
               moveTaskDown(todo, taskIndex) {
                 const task = todo.tasks.splice(taskIndex, 1)[0];
                 let newIndex = (taskIndex + 1) % (todo.tasks.length + 1);
-    
+
                 if (newIndex === todo.tasks.length) {
                   todo.tasks.push(task);
                 } else {
@@ -418,11 +424,18 @@
               },
               editHeader(index, name) {
                 this.editableHeader = index;
+                // Уверяваме се, че текстът за редакция е точно копие на оригиналния текст
                 this.headerEdits = name;
               },
               saveHeaderEdit(index) {
                 if (this.headerEdits.trim()) {
                   this.$set(this.todos[index], "name", this.headerEdits.trim());
+                  const extractedAddress = this.extractAddress(this.headerEdits.trim());
+                  console.log("Extracted Address:", extractedAddress);
+                  const isAddress = this.isValidAddress(extractedAddress);
+                  console.log("Is Valid Address:", isAddress);
+                  this.$set(this.todos[index], "address", isAddress ? extractedAddress : "");
+                  this.$set(this.todos[index], "isAddress", isAddress);
                   this.editableHeader = null;
                   this.headerEdits = "";
                   this.updatedAt = new Date().toISOString();
@@ -447,18 +460,18 @@
               },
               validatePdf(event) {
                 const file = event.target.files[0];
-    
+
                 if (file.type !== "application/pdf") {
                   alert("Please upload a valid PDF file.");
                   return;
                 }
-    
+
                 const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
                 if (file.size > maxSizeInBytes) {
                   alert("The file size should not exceed 5MB.");
                   return;
                 }
-    
+
                 this.clearLocalStorage();
                 this.importPdf(event);
               },
@@ -466,26 +479,26 @@
                 const file = event.target.files[0];
                 const formData = new FormData();
                 formData.append("file", file);
-    
+
                 this.isLoading = true;
-    
+
                 try {
                   const response = await fetch(`${this.serverUrl}/extract-pdf`, {
                     method: "POST",
                     body: formData,
                   });
-    
+
                   if (!response.ok) {
                     throw new Error("Network response was not ok");
                   }
-    
+
                   const pdfData = await response.json();
-    
+
                   this.todos = [];
                   this.headerText = pdfData.header_text || "";
                   this.fullText = pdfData.full_text || [];
                   this.specificInfo = pdfData.specific_info || [];
-    
+
                   this.populateFromPdfData(pdfData.tables);
                   this.saveToLocalStorage(); // Save to localStorage after successful import
                   this.buttonGroupVisible = false; // Close the button group after successful import
@@ -497,14 +510,13 @@
               },
               populateFromPdfData(pdfData) {
                 this.todos = pdfData.map((item, index) => {
-                  console.log(item.title);
                   const title = item.title || "Unnamed Task";
                   const extractedAddress = this.extractAddress(title);
-                  const isAddress = extractedAddress !== title; // Проверка дали е извлечен валиден адрес
+                  const isAddress = this.isValidAddress(extractedAddress); // Validate address
                   return {
                     id: index,
-                    name: title, // Оригиналното заглавие от PDF
-                    address: isAddress ? extractedAddress : "", // Екстрактнатият адрес, ако е валиден
+                    name: title, // Original title from PDF
+                    address: isAddress ? extractedAddress : "", // Extracted address if valid
                     isAddress: isAddress,
                     startDate: new Date(),
                     tasks: [
@@ -584,17 +596,40 @@
                 }
               },
               extractAddress(text) {
-                // Регекс за извличане на последната част от текста, която най-вероятно е адрес
+                // Регекс за извличане на адрес
                 const regex = /(?:.*,)?\s*([^,]*\d+[^,]*),\s*([^,]+)$/;
                 const match = text.match(regex);
                 if (match) {
+                  console.log("Extract Address Function:", match[1], match[2]);
                   return `${match[1]}, ${match[2]}`.trim();
                 }
-                return text; // Връщаме оригиналния текст, ако не можем да извлечем адреса
+                console.log("Extract Address Function: No match found");
+                return ""; // Връщаме празен низ, ако не можем да извлечем адреса
+              },
+
+              isValidAddress(address) {
+                // Регекс за проверка на валидността на адреса
+                const addressRegex = /\d+\s+\w+/; // Може да се промени за по-добра проверка
+                const isValid = addressRegex.test(address);
+                console.log("Is Valid Address Function:", address, isValid);
+                return isValid;
               },
               openGoogleMaps(address) {
+                if (!this.isValidAddress(address)) {
+                  alert("No valid address provided.");
+                  return;
+                }
                 const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
                 window.open(url, "_blank");
+              },
+              validateTodosAddresses() {
+                this.todos.forEach((todo, index) => {
+                  const extractedAddress = this.extractAddress(todo.name);
+                  console.log("Validate Todos Addresses:", todo.name, extractedAddress);
+                  const isAddress = this.isValidAddress(extractedAddress);
+                  this.$set(this.todos[index], "address", isAddress ? extractedAddress : "");
+                  this.$set(this.todos[index], "isAddress", isAddress);
+                });
               },
             },
             async mounted() {
@@ -611,6 +646,5 @@
           console.error("Error loading config:", error);
         });
     </script>
-    
   </body>
 </html>
