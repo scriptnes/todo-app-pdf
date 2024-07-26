@@ -597,7 +597,6 @@
                 const match = text.match(regex);
                 if (match) {
                   const address = `${match[1]}, ${match[2]} ${match[3]}`.trim();
-                  console.log("Extracted Address:", address);
                   return address;
                 }
                 console.log("No Address Found");
@@ -607,7 +606,6 @@
               isValidAddress(address) {
                 const addressRegex = /[^,]+,\s*\d{4,5}\s+[^,]+/;
                 const isValid = addressRegex.test(address);
-                console.log("Address Validation:", address, isValid);
                 return isValid;
               },
               openGoogleMaps(address) {
@@ -622,9 +620,6 @@
                 this.todos.forEach((todo, index) => {
                   const extractedAddress = this.extractAddress(todo.name);
                   const isAddress = this.isValidAddress(extractedAddress);
-                  console.log(`Todo ${index}:`, todo.name);
-                  console.log(`Extracted Address ${index}:`, extractedAddress);
-                  console.log(`Is Address ${index}:`, isAddress);
                   this.$set(this.todos[index], "address", isAddress ? extractedAddress : "");
                   this.$set(this.todos[index], "isAddress", isAddress);
                 });
