@@ -80,14 +80,13 @@
             :id="'heading' + todoIndex"
             :style="{ color: getContrastingColor(getCardStyle(todoIndex).backgroundColor) }"
           >
-          <div v-if="editableHeader === todoIndex" class="flex-grow-1">
-            <!-- Сигуряваме се, че input полето получава точно копие на оригиналния текст -->
-            <input v-model="headerEdits" class="form-control w-100" />
-            <div class="d-flex mt-2">
-              <button class="btn btn-sm btn-success mr-2" @click="saveHeaderEdit(todoIndex)">Save</button>
-              <button class="btn btn-sm btn-secondary" @click="cancelHeaderEdit()">Cancel</button>
+            <div v-if="editableHeader === todoIndex" class="flex-grow-1">
+              <input v-model="headerEdits" class="form-control w-100" />
+              <div class="d-flex mt-2">
+                <button class="btn btn-sm btn-success mr-2" @click="saveHeaderEdit(todoIndex)">Save</button>
+                <button class="btn btn-sm btn-secondary" @click="cancelHeaderEdit()">Cancel</button>
+              </div>
             </div>
-          </div>
             <div v-else class="d-flex justify-content-between align-items-center w-100">
               <h5 class="mb-0 flex-grow-1">
                 <button
@@ -95,6 +94,7 @@
                   @click="toggleCollapse(todoIndex)"
                   :style="{ color: todo.name ? getContrastingColor(getCardStyle(todoIndex).backgroundColor) : '#343a40' }"
                 >
+                  <strong v-if="extractTime(todo.tasks[0])">{{ extractTime(todo.tasks[0]) }}</strong>
                   {{ todo.name || 'Start tasks here..' }}
                 </button>
               </h5>
@@ -246,8 +246,8 @@
               isLoading: false,
               isEditingSpecificInfo: false,
               editableSpecificInfo: "",
-              startColor: "#336699", 
-              endColor: "#000033", 
+              startColor: "#336699",
+              endColor: "#000033",
             },
             computed: {
               isSmallScreen() {
@@ -335,13 +335,13 @@
                 return gradient;
               },
               generateDarkColors() {
-                const steps = this.todos.length; 
+                const steps = this.todos.length;
                 const gradientPalette = this.generateGradientColors(this.startColor, this.endColor, steps);
                 return gradientPalette;
               },
               applyGradientColors() {
-                this.saveToLocalStorage(); 
-                this.$forceUpdate(); 
+                this.saveToLocalStorage();
+                this.$forceUpdate();
               },
               fetchData() {
                 const savedData = this.loadFromLocalStorage();
@@ -497,8 +497,8 @@
                   this.specificInfo = pdfData.specific_info || [];
 
                   this.populateFromPdfData(pdfData.tables);
-                  this.saveToLocalStorage(); 
-                  this.buttonGroupVisible = false; 
+                  this.saveToLocalStorage();
+                  this.buttonGroupVisible = false;
                 } catch (error) {
                   alert("Error importing PDF: " + error.message);
                 } finally {
@@ -509,11 +509,11 @@
                 this.todos = pdfData.map((item, index) => {
                   const title = item.title || "Unnamed Task";
                   const extractedAddress = this.extractAddress(title);
-                  const isAddress = this.isValidAddress(extractedAddress); 
+                  const isAddress = this.isValidAddress(extractedAddress);
                   return {
                     id: index,
-                    name: title, 
-                    address: isAddress ? extractedAddress : "", 
+                    name: title,
+                    address: isAddress ? extractedAddress : "",
                     isAddress: isAddress,
                     startDate: new Date(),
                     tasks: [
@@ -593,17 +593,21 @@
                 }
               },
               extractAddress(text) {
-                const regex = /(?:.*,)?\s*([^,]*\d+[^,]*),\s*([^,]+)$/;
+                const regex = /([^,]+),\s*(\d{4,5})\s+([^,]+)$/;
                 const match = text.match(regex);
                 if (match) {
-                  return `${match[1]}, ${match[2]}`.trim();
+                  const address = `${match[1]}, ${match[2]} ${match[3]}`.trim();
+                  console.log("Extracted Address:", address);
+                  return address;
                 }
-                return ""; 
+                console.log("No Address Found");
+                return "";
               },
 
               isValidAddress(address) {
-                const addressRegex = /\d+\s+\w+/; 
+                const addressRegex = /[^,]+,\s*\d{4,5}\s+[^,]+/;
                 const isValid = addressRegex.test(address);
+                console.log("Address Validation:", address, isValid);
                 return isValid;
               },
               openGoogleMaps(address) {
@@ -618,13 +622,25 @@
                 this.todos.forEach((todo, index) => {
                   const extractedAddress = this.extractAddress(todo.name);
                   const isAddress = this.isValidAddress(extractedAddress);
+                  console.log(`Todo ${index}:`, todo.name);
+                  console.log(`Extracted Address ${index}:`, extractedAddress);
+                  console.log(`Is Address ${index}:`, isAddress);
                   this.$set(this.todos[index], "address", isAddress ? extractedAddress : "");
                   this.$set(this.todos[index], "isAddress", isAddress);
                 });
               },
+              extractTime(task) {
+                if (task && task.includes("Beginn")) {
+                  const timeMatch = task.match(/Beginn\s*:\s*(\d{1,2}:\d{2})/);
+                  if (timeMatch) {
+                    return timeMatch[1];
+                  }
+                }
+                return null;
+              },
             },
             async mounted() {
-              await this.fetchServerConfig(); 
+              await this.fetchServerConfig();
               this.fetchData();
               window.addEventListener("resize", this.updateWindowWidth);
             },
